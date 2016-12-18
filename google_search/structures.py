@@ -4,16 +4,29 @@ class SearchResults:
     def __init__(self, query):
         self._index = 0
         self._query = query
+        self._results = {}
 
     def __len__(self):
-        return self.__dict__.__len__()
+        return self._results.__len__()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._index < self._results.__len__():
+            res = self._results[self._index]
+            self._index += 1
+        else:
+            self._index = 0
+            raise StopIteration
+        return res
 
     def append(self, item):
-        self.__dict__[self._index] = item
-        self._index += 1
+        self._results[self._results.__len__()] = item
 
     def get(self, index):
-        return self.__dict__[index]
+        return self._results[index]
+
 
 
 class SearchItem:
@@ -28,3 +41,5 @@ class SearchItem:
     def get_url(self):
         return self._href
 
+    def __str__(self):
+        return "title: {} : href: {}".format(self._title, self._href)

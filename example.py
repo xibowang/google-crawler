@@ -7,4 +7,6 @@ if __name__ == '__main__':
     search_query = "united kingdom"
     result = crawler.search(search_query)
     print(result)
+    for item in result:
+        print(item)
 
