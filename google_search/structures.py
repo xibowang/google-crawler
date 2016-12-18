@@ -28,7 +28,6 @@ class SearchResults:
         return self._results[index]
 
 
-
 class SearchItem:
 
     def __init__(self, title, href):
