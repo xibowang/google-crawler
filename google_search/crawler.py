@@ -40,7 +40,6 @@ def search_news(query, date_start=None, date_end=None):
 
     content = fetch_page(url)
     dom = BeautifulSoup(content, HTML_PARSER)
-    print(dom.prettify())
     search_result = SearchResults(query)
     links = dom.find_all('a', {'class': 'l _HId'})
     for link in links:
@@ -77,7 +76,7 @@ def _url_encode_date(date):
 def _random_user_agent():
     file_path = '{}/useragents'.format(os.path.dirname(__file__))
     with open(file_path, 'r') as file:
-        user_agents = file.readlines()
+        user_agents = file.read().splitlines()
         line_num = len(user_agents)
         return user_agents[random.randrange(line_num)]
 
