@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import random
 import gzip
 import urllib.request
 import urllib.parse
 from bs4 import BeautifulSoup
 from .structures import SearchResults, SearchItem
+import os
 
 
 REQUEST_URL = "https://{}/{}"
@@ -12,14 +14,13 @@ GOOGLE_SEARCH = "search?hl=en&q={}"
 SEARCH_NEWS = "&tbm=nws"
 CUSTOMIZED_DATE = "&tbs=cdr:1,cd_min:{},cd_max:{}"
 HTML_PARSER = 'html.parser'
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36"
 
 
 def fetch_page(query):
     url = REQUEST_URL.format(BASE_URL, query)
     request = urllib.request.Request(url)
-    request.add_header('User-agent', USER_AGENT)
-    request.add_header('connection','keep-alive')
+    request.add_header('User-agent', _random_user_agent())
+    request.add_header('connection', 'keep-alive')
     request.add_header('Accept-Encoding', 'gzip, deflate, sdch, br')
     request.add_header('referer', REQUEST_URL.format(BASE_URL, ""))
     print(url)
@@ -30,22 +31,18 @@ def fetch_page(query):
     return gzip.decompress(data)
 
 
-def url_encode(data):
-    return urllib.parse.quote_plus(data)
-
-
 def search_news(query, date_start=None, date_end=None):
     url = GOOGLE_SEARCH + SEARCH_NEWS
-    url = url.format(url_encode(query))
+    url = url.format(_url_encode(query))
 
     if date_start is not None and date_end is not None:
-        url += CUSTOMIZED_DATE.format(url_encode_date(date_start), url_encode_date(date_end))
+        url += CUSTOMIZED_DATE.format(_url_encode_date(date_start), _url_encode_date(date_end))
 
     content = fetch_page(url)
     dom = BeautifulSoup(content, HTML_PARSER)
     print(dom.prettify())
     search_result = SearchResults(query)
-    links = dom.find_all('a', {'class':'l _HId'})
+    links = dom.find_all('a', {'class': 'l _HId'})
     for link in links:
         search_result.append(SearchItem(link.text, link.get('href')))
 
@@ -53,10 +50,10 @@ def search_news(query, date_start=None, date_end=None):
 
 
 def search_web(query, date_start=None, date_end=None):
-    url = GOOGLE_SEARCH.format(url_encode(query))
+    url = GOOGLE_SEARCH.format(_url_encode(query))
 
     if date_start is not None and date_end is not None:
-        url += CUSTOMIZED_DATE.format(url_encode_date(date_start), url_encode_date(date_end))
+        url += CUSTOMIZED_DATE.format(_url_encode_date(date_start), _url_encode_date(date_end))
 
     content = fetch_page(url)
     dom = BeautifulSoup(content, HTML_PARSER)
@@ -69,8 +66,20 @@ def search_web(query, date_start=None, date_end=None):
     return search_result
 
 
-def url_encode_date(date):
-    return url_encode("{}/{}/{}".format(date.day, date.month, date.year))
+def _url_encode(data):
+    return urllib.parse.quote_plus(data)
+
+
+def _url_encode_date(date):
+    return _url_encode("{}/{}/{}".format(date.day, date.month, date.year))
+
+
+def _random_user_agent():
+    file_path = '{}/useragents'.format(os.path.dirname(__file__))
+    with open(file_path, 'r') as file:
+        user_agents = file.readlines()
+        line_num = len(user_agents)
+        return user_agents[random.randrange(line_num)]
 
 
 def write_to_local(content):
@@ -78,6 +87,6 @@ def write_to_local(content):
         text_file.write(content.decode())
 
 
-def write_bytes(bytes):
+def write_bytes(content):
     with open("sample.bytes", "wb") as text_file:
-        text_file.write(bytes)
+        text_file.write(content)
